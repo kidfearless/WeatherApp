@@ -1,0 +1,181 @@
+body
+{
+	
+	color: rgb(255, 255, 255);
+	font-family: 'Noto Sans JP', sans-serif, 'Roboto', sans-serif;
+	font-size: 24px;
+	margin:0px;
+	padding:8px;
+	/* Padding to avoid the "unsafe" areas behind notches in the screen */
+	/* padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); */
+}
+
+.Banner
+{
+	min-height: 24%;
+}
+
+.Weather
+{
+	min-width: 24%;
+}
+
+#App
+{
+	margin: auto;
+	height: 746px;
+	width: 408px;
+	padding: 8px;
+	box-sizing: border-box;
+}
+
+/* .dev-box
+{
+	border: 1px;
+	border-style: dashed;
+}
+*/
+
+#MainWeather > h1
+{
+	margin: auto;
+	width: min-content;
+	font-size: 3em;
+	margin: 0.8rem auto 2rem auto;
+}
+
+.card
+{
+	background-color: #efefef0e !important;
+}
+
+.hr 
+{
+	margin: auto;
+	border-top: 1px solid rgba(160,160,160,0.2);
+}
+
+#EstimationBox > span:nth-child(1)
+{
+	margin-bottom: 4px;
+}
+
+#EstimationBox span
+{
+	margin: 14px 0 20px 0;
+}
+
+
+
+#HourlyWeather
+{
+	display: grid;
+	grid-template-columns: repeat(4, 25%);
+	padding: 1rem;
+}
+
+#HourlyWeather > div
+{
+	text-align: center;
+}
+
+
+#HourlyWeather > div> img
+{
+	margin-bottom: -15px;
+}
+
+#HourlyWeather > img
+{
+	width: 96px;
+}
+
+#HourlyWeather:last-child
+{
+	margin-top: 58px;
+}
+
+#EstimationBox
+{
+	text-align: center;
+	display: grid;
+	grid-template-rows: auto auto;
+}
+
+#EstimationBox > span
+{
+	/* font-size: 1.5em; */
+}
+
+#EstimationBox > div
+{
+	display: grid;
+	grid-template-columns: 50% 50%;
+	/* font-size: 1.4em; */
+}
+
+.weather-svg
+{
+/* 	background-repeat: no-repeat;
+	background-size: contain;
+	background-position: center;
+	background-position-x: center;
+	background-position-y: center; */
+	height: 48px;
+	width: 48px;
+	transform: scale(1.5);
+/* 	margin-top: -16px;
+	margin-left: -16px; */
+}
+
+#HourlyWeather > div:nth-child(1) > img
+{
+	transform: scale(2);
+}
+
+#SettingsBox 
+{
+	text-align: center;
+}
+
+#SettingsBox > div
+{
+	display: grid;
+	grid-template-columns: 50% 50%;
+}
+
+hr
+{
+	width: 65%;
+}
+
+.card-1
+{
+	box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+	transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+}
+
+.card-1:hover
+{
+	box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+}
+
+.card-2
+{
+	box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+}
+
+.card-3
+{
+	box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+}
+
+.card-4
+{
+	box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+}
+
+.card-5
+{
+	box-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22);
+}

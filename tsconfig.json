@@ -1,0 +1,28 @@
+{
+	"compilerOptions": {
+	  "sourceMap": true,
+	  "module": "ES2020",
+	  "esModuleInterop": true,
+	  "experimentalDecorators": true,
+	  "target": "ES6",
+	  "jsx": "react",
+	  "strictPropertyInitialization": true,
+	  "strictNullChecks": true,
+	  "strictBindCallApply": true,
+	  "noImplicitAny": true,
+	  "noImplicitThis": true,
+	  "removeComments": true,
+	  "pretty": true,
+	  "lib": [
+		"dom",
+		"es6",
+	  ],
+	  "alwaysStrict": true,
+	  "outDir": "./www/js",
+	  "rootDir": "./www/ts/"
+	},
+	"include": [
+	  "./www/**/*.ts",
+	],
+	"compileOnSave": true
+}

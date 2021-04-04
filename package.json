@@ -1,0 +1,40 @@
+{
+  "name": "io.cordova.hellocordova",
+  "displayName": "HelloCordova",
+  "version": "1.0.0",
+  "description": "A sample Apache Cordova application that responds to the deviceready event.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ecosystem:cordova"
+  ],
+  "author": "Apache Cordova Team",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "cordova-browser": "^6.0.0",
+    "cordova-electron": "^1.1.1",
+    "cordova-plugin-geolocation": "^4.1.0",
+    "cordova-plugin-whitelist": "^1.3.4",
+    "typescript": "^4.3.0-beta"
+  },
+  "cordova": {
+    "plugins": {
+      "cordova-plugin-whitelist": {},
+      "cordova-plugin-geolocation": {
+        "GPS_REQUIRED": "true"
+      }
+    },
+    "platforms": [
+      "electron",
+      "browser"
+    ]
+  },
+  "dependencies": {
+    "@types/cordova": "^0.0.34",
+    "@types/luxon": "^1.26.2",
+    "datetime-dotnet": "^1.0.13",
+    "luxon": "^1.26.0"
+  }
+}

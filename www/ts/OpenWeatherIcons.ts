@@ -1,0 +1,20 @@
+/// <reference types"
+export var OpenWeatherIcons = new Map<string, string>();
+OpenWeatherIcons.set("50d", "/img/weather/cloudy.svg");
+OpenWeatherIcons.set("50n", "/img/weather/cloudy.svg");
+OpenWeatherIcons.set("09d", "/img/weather/rainy-7.svg");
+OpenWeatherIcons.set("09n", "/img/weather/rainy-7.svg");
+OpenWeatherIcons.set("13d", "/img/weather/snowy-6.svg");
+OpenWeatherIcons.set("13n", "/img/weather/snowy-6.svg");
+OpenWeatherIcons.set("11d", "/img/weather/thunder.svg");
+OpenWeatherIcons.set("11n", "/img/weather/thunder.svg");
+OpenWeatherIcons.set("03d", "/img/weather/cloudy.svg");
+OpenWeatherIcons.set("03n", "/img/weather/cloudy.svg");
+OpenWeatherIcons.set("04d", "/img/weather/cloudy.svg");
+OpenWeatherIcons.set("04n", "/img/weather/cloudy.svg");
+OpenWeatherIcons.set("02d", "/img/weather/cloudy-day-3.svg");
+OpenWeatherIcons.set("02n", "/img/weather/cloudy-night-3.svg");
+OpenWeatherIcons.set("01d", "/img/weather/day.svg");
+OpenWeatherIcons.set("01n", "/img/weather/night.svg");
+OpenWeatherIcons.set("10d", "/img/weather/rainy-3.svg");
+OpenWeatherIcons.set("10n", "/img/weather/rainy-6.svg");

@@ -54,6 +54,15 @@ export class ConfigManager
 		Config.Set("UpdateRate", value.TotalMilliseconds);
 	}
 
+	public static get UpdateRateInSeconds()
+	{
+		return ConfigManager.UpdateRate.TotalSeconds;
+	}
+	public static set UpdateRateInSeconds(value: number)
+	{
+		ConfigManager.UpdateRate = TimeSpan.FromSeconds(value);
+	}
+
 	public static get LastAlertDate()
 	{
 		let lastdate = Config.Get<string>("LastAlertDate",

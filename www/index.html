@@ -86,21 +86,28 @@
 			<div id="SettingsBox" class="dev-box card z-depth-3">
 				<span>SETTINGS</span>
 				<div id="Settings">
-					<span>Walking Temp: </span>
+					<span>Walking Temp</span>
 					<input type="number" data-BindConfigNumber="AlertPoint" value="45" />
 
 					<!--  -->
 
-					<span>Use Celcius: </span>
-					<input data-bindconfigbool="UseCelcius" type="checkbox" />
-
+					<span>Update Rate</span>
+					<input type="number" data-BindConfigNumber="UpdateRateInSeconds" value="60" />
+					
 					<!--  -->
+					
+					<span>Use Celcius</span>
+					<input data-bindconfigbool="UseCelcius" type="checkbox" />
+					<!--  -->
+					
+					<span>Use Feels Like</span>
+					<input data-bindconfigbool="UseFeelsLike" type="checkbox" />
 				</div>
 			</div>
 		</div>
 
 		<script src="js/app.js" type="module"></script>
-		<script src="cordova.js"></script>
+		<script type="text/javascript" src="cordova.js"></script>
 		<script type="text/javascript" src="js/materialize.js"></script>
 
 	</body>

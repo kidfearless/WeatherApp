@@ -71,7 +71,7 @@ body
 #HourlyWeather
 {
 	display: grid;
-	grid-template-columns: repeat(4, 25%);
+	grid-template-columns: repeat(4, calc(100% / 4));
 
 }
 
@@ -155,4 +155,16 @@ input[type=number]
 input[type=checkbox]
 {
 	margin: auto 0;
+	width: 24px;
+	height: 24px;
+}
+
+#Settings > span
+{
+	text-align: start;
+}
+#SettingsBox > span:nth-child(1)
+{
+	margin: 7px 0 8px 0;
+	display:block;
 }

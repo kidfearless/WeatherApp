@@ -8,7 +8,7 @@ import { NotificationManager } from "./INotificationManager.js";
 import { LanguageCode } from "./OpenWeatherMapAPI/languageCode.js";
 // import { luxon.DateTime, TimeSpan } from "./_luxon.DateTime.js";
 import * as GeoLocation from "./GeoLocationExtensions.js";
-import { DateTime } from "./datetime.js";
+import { DateTime, TimeSpan } from "./datetime.js";
 import { CurrentWeather } from "./OpenWeatherMapAPI/currentWeather.js";
 import { EventListenerCallback, EventManager } from './EventManager.js';
 import { OneCallResponse, WeatherReport, Weather } from './OpenWeatherMapAPI/oneCall.js';
@@ -21,6 +21,8 @@ import { ConfigManager } from "./ConfigManager.js";
 import { OpenWeathApiKey as OpenWeatherApiKey } from "./Secrets.js";
 import { OpenWeathApiKey } from './Secrets';
 
+type Timer = number|undefined;
+
 class App
 {
 	//#region html elements
@@ -32,7 +34,7 @@ class App
 	//#endregion
 
 
-	private Timer: number | NodeJS.Timeout;
+	private Timer: Timer;
 	private WeatherAPI: OpenWeatherAPI;
 
 	//#region events
@@ -43,6 +45,7 @@ class App
 	// fired the config has been updated with the new values
 	// passes the changed property in it's parameter
 	public DataBindingUpdated: EventManager<string>;
+	private Timeout: Timer;
 	//#endregion
 
 
@@ -51,7 +54,8 @@ class App
 	 */
 	constructor()
 	{
-		this.Timer = 0;
+		this.Timer = undefined;
+		this.Timeout = undefined;
 
 		this.WeatherAPI = new OpenWeatherAPI(OpenWeatherApiKey);
 
@@ -198,10 +202,20 @@ class App
 	// Fired when cordova interfaces are accessible
 	public OnReady()
 	{
+		this.UpdateTimer();
+	}
+
+	private UpdateTimer()
+	{
 		if (!this.Timer)
 		{
-			this.Timer = setInterval(this.Timer_Ticked.bind(this), ConfigManager.UpdateRate.TotalMilliseconds);
+			Debug.WriteLine(`assigning timer update rate to fire every ${ConfigManager.UpdateRate.TotalSeconds} seconds`);
+			this.Timer = setInterval(this.Timer_Ticked.bind(this) as TimerHandler, ConfigManager.UpdateRate.TotalMilliseconds);
 			this.Timer_Ticked();
+		}
+		else
+		{
+			Debug.WriteLine("Timer was not null when assigning it");
 		}
 	}
 
@@ -266,10 +280,10 @@ class App
 			return;
 		}
 
-		if (this.GetDesiredTemperature(weather.main) >= ConfigManager.AlertPoint)
+		if (App.GetDesiredTemperature(weather.main) >= ConfigManager.AlertPoint)
 		{
 			this.GoodWeatherAlerted.Invoke();
-			NotificationManager.PushNotification("Time for your walk 🏃", `It's currently ${weather.main.temp} ${ConfigManager.DegreesSymbol} and a perfect time for a walk`);
+			NotificationManager.PushNotification("Time for your walk 🏃", `It's currently ${weather.main.temp}(${weather.main.feels_like}) ${ConfigManager.DegreesSymbol} and a perfect time for a walk`);
 			ConfigManager.LastAlertDate = DateTime.Today;
 		}
 	}
@@ -332,7 +346,7 @@ class App
 			}
 
 			return `<div>
-						<div>${weather.temp.toFixed(1)}${ConfigManager.DegreesSymbol}</div>
+						<div>${App.GetDesiredTemperature(weather).toFixed(1)}${ConfigManager.DegreesSymbol}</div>
 						<img src="${OpenWeatherIcons.get(weather.weather[0].icon)}" class="weather-svg" />
 						<div>${timestring}</div>
 					</div>`;
@@ -358,7 +372,7 @@ class App
 				break;
 			}
 
-			let futureTemp = this.GetDesiredTemperature(report);
+			let futureTemp = App.GetDesiredTemperature(report);
 
 
 			if (futureTemp >= alertPoint)
@@ -373,13 +387,13 @@ class App
 			let date = DateTime.FromUTCTimeStamp(bestReport.dt);
 			this.EstimationReport.innerHTML = `
 			<span class="dev-box">${App.GetTime(date)}</span>
-			<span class="dev-box">${bestReport.temp.toFixed(0)}${ConfigManager.DegreesSymbol}</span>`;
+			<span class="dev-box">${bestReport.temp.toFixed(0)}${ConfigManager.DegreesSymbol}(${bestReport.feels_like.toFixed(0)}${ConfigManager.DegreesSymbol})</span>`;
 		}
 		else
 		{
 			this.EstimationReport.innerHTML = `
 			<span class="dev-box">Now</span>
-			<span class="dev-box">${ConfigManager.CurrentWeather?.main.temp ?? "N/A"}${ConfigManager.DegreesSymbol}</span>`;
+			<span class="dev-box">N/A</span>`;
 		}
 
 	}
@@ -388,7 +402,7 @@ class App
 	private GenerateCurrentWeather(weather: CurrentWeather)
 	{
 		// might seem silly to put this single line in a function, it's just to match the naming of the other generate functions
-		this.MainWeather.innerHTML = `<h1 class="dev-box">${weather.main.temp.toFixed(0)}${ConfigManager.DegreesSymbol}</h1>`;
+		this.MainWeather.innerHTML = `<h1 class="dev-box">${App.GetDesiredTemperature(weather.main).toFixed(0)}${ConfigManager.DegreesSymbol}</h1>`;
 	}
 
 	private OnWeatherRetreived(weather: CurrentWeather)
@@ -397,12 +411,31 @@ class App
 		this.GenerateCurrentWeather(weather);
 	}
 
+	// Fired after the config has been assigned
 	private OnDataBindingUpdated(property:string)
 	{
-		// Trigger a weather update when they switch to/from celcius so that we don't have to wait the full time for the changes to take place
-		if(property === "UseCelcius")
-		{
-			this.UpdateWeather();
+		switch (property) {
+			case "UseCelcius":
+				this.UpdateWeather();
+				break;
+			case "UseFeelsLike":
+				this.GenerateCurrentWeather(ConfigManager.CurrentWeather!);
+				this.GenerateForecast(ConfigManager.SavedForecast!);
+				this.GenerateWalkTime(ConfigManager.SavedForecast!);
+			case "UpdateRateInSeconds":
+				// stop the old timer
+				Debug.WriteLine(`Clearing timer '${this.Timer}'`);
+				clearInterval(this.Timer);
+				// need to null this out so that it can be re-assigned
+				this.Timer = undefined;
+				// if they are updating a lot clear the next update func
+				Debug.WriteLine(`Clearing timeout '${this.Timeout}'`);
+				clearTimeout(this.Timeout);
+				// Create the new timer after their current update rate has passed
+				// So if they went from every 10 seconds to every 15, then we wait 15 seconds then create the timer.
+				Debug.WriteLine(`Creating the new timer in '${ConfigManager.UpdateRate.TotalSeconds}' seconds`);
+				this.Timeout = setTimeout((() => this.UpdateTimer()) as TimerHandler, ConfigManager.UpdateRate.TotalMilliseconds);
+				break;
 		}
 	}
 
@@ -429,7 +462,7 @@ class App
 		return timestring;
 	}
 
-	private GetDesiredTemperature(weather: { feels_like: number; temp: number; })
+	private static GetDesiredTemperature(weather: { feels_like: number; temp: number; })
 	{
 		if (ConfigManager.UseFeelsLike)
 		{

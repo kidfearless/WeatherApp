@@ -32,6 +32,12 @@ export class ConfigManager {
     static set UpdateRate(value) {
         Config.Set("UpdateRate", value.TotalMilliseconds);
     }
+    static get UpdateRateInSeconds() {
+        return ConfigManager.UpdateRate.TotalSeconds;
+    }
+    static set UpdateRateInSeconds(value) {
+        ConfigManager.UpdateRate = TimeSpan.FromSeconds(value);
+    }
     static get LastAlertDate() {
         let lastdate = Config.Get("LastAlertDate", DateTime.MinValue.ToJSONString());
         return DateTime.FromJSONString(lastdate);

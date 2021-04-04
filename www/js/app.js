@@ -11,7 +11,8 @@ import { ConfigManager } from "./ConfigManager.js";
 import { OpenWeathApiKey as OpenWeatherApiKey } from "./Secrets.js";
 class App {
     constructor() {
-        this.Timer = 0;
+        this.Timer = undefined;
+        this.Timeout = undefined;
         this.WeatherAPI = new OpenWeatherAPI(OpenWeatherApiKey);
         this.MainWeather = document.getElementById("MainWeather");
         this.RootElement = document.getElementById("App");
@@ -101,9 +102,16 @@ class App {
         Debug.WriteLine("Finished Loading Saved Data...");
     }
     OnReady() {
+        this.UpdateTimer();
+    }
+    UpdateTimer() {
         if (!this.Timer) {
+            Debug.WriteLine(`assigning timer update rate to fire every ${ConfigManager.UpdateRate.TotalSeconds} seconds`);
             this.Timer = setInterval(this.Timer_Ticked.bind(this), ConfigManager.UpdateRate.TotalMilliseconds);
             this.Timer_Ticked();
+        }
+        else {
+            Debug.WriteLine("Timer was not null when assigning it");
         }
     }
     Timer_Ticked() {
@@ -134,9 +142,9 @@ class App {
         if (DateTime.Today.Subtract(ConfigManager.LastAlertDate).TotalDays < 1) {
             return;
         }
-        if (this.GetDesiredTemperature(weather.main) >= ConfigManager.AlertPoint) {
+        if (App.GetDesiredTemperature(weather.main) >= ConfigManager.AlertPoint) {
             this.GoodWeatherAlerted.Invoke();
-            NotificationManager.PushNotification("Time for your walk 🏃", `It's currently ${weather.main.temp} ${ConfigManager.DegreesSymbol} and a perfect time for a walk`);
+            NotificationManager.PushNotification("Time for your walk 🏃", `It's currently ${weather.main.temp}(${weather.main.feels_like}) ${ConfigManager.DegreesSymbol} and a perfect time for a walk`);
             ConfigManager.LastAlertDate = DateTime.Today;
         }
     }
@@ -173,7 +181,7 @@ class App {
                 timestring = `${date.Hour - 12} PM`;
             }
             return `<div>
-						<div>${weather.temp.toFixed(1)}${ConfigManager.DegreesSymbol}</div>
+						<div>${App.GetDesiredTemperature(weather).toFixed(1)}${ConfigManager.DegreesSymbol}</div>
 						<img src="${OpenWeatherIcons.get(weather.weather[0].icon)}" class="weather-svg" />
 						<div>${timestring}</div>
 					</div>`;
@@ -184,7 +192,6 @@ class App {
         }
     }
     GenerateWalkTime(data) {
-        var _a, _b;
         let bestReport = null;
         let alertPoint = ConfigManager.AlertPoint;
         for (let report of data.hourly) {
@@ -192,7 +199,7 @@ class App {
             if (time.DayOfWeek !== DateTime.Today.DayOfWeek) {
                 break;
             }
-            let futureTemp = this.GetDesiredTemperature(report);
+            let futureTemp = App.GetDesiredTemperature(report);
             if (futureTemp >= alertPoint) {
                 bestReport = report;
                 break;
@@ -202,24 +209,39 @@ class App {
             let date = DateTime.FromUTCTimeStamp(bestReport.dt);
             this.EstimationReport.innerHTML = `
 			<span class="dev-box">${App.GetTime(date)}</span>
-			<span class="dev-box">${bestReport.temp.toFixed(0)}${ConfigManager.DegreesSymbol}</span>`;
+			<span class="dev-box">${bestReport.temp.toFixed(0)}${ConfigManager.DegreesSymbol}(${bestReport.feels_like.toFixed(0)}${ConfigManager.DegreesSymbol})</span>`;
         }
         else {
             this.EstimationReport.innerHTML = `
 			<span class="dev-box">Now</span>
-			<span class="dev-box">${(_b = (_a = ConfigManager.CurrentWeather) === null || _a === void 0 ? void 0 : _a.main.temp) !== null && _b !== void 0 ? _b : "N/A"}${ConfigManager.DegreesSymbol}</span>`;
+			<span class="dev-box">N/A</span>`;
         }
     }
     GenerateCurrentWeather(weather) {
-        this.MainWeather.innerHTML = `<h1 class="dev-box">${weather.main.temp.toFixed(0)}${ConfigManager.DegreesSymbol}</h1>`;
+        this.MainWeather.innerHTML = `<h1 class="dev-box">${App.GetDesiredTemperature(weather.main).toFixed(0)}${ConfigManager.DegreesSymbol}</h1>`;
     }
     OnWeatherRetreived(weather) {
         ConfigManager.CurrentWeather = weather;
         this.GenerateCurrentWeather(weather);
     }
     OnDataBindingUpdated(property) {
-        if (property === "UseCelcius") {
-            this.UpdateWeather();
+        switch (property) {
+            case "UseCelcius":
+                this.UpdateWeather();
+                break;
+            case "UseFeelsLike":
+                this.GenerateCurrentWeather(ConfigManager.CurrentWeather);
+                this.GenerateForecast(ConfigManager.SavedForecast);
+                this.GenerateWalkTime(ConfigManager.SavedForecast);
+            case "UpdateRateInSeconds":
+                Debug.WriteLine(`Clearing timer '${this.Timer}'`);
+                clearInterval(this.Timer);
+                this.Timer = undefined;
+                Debug.WriteLine(`Clearing timeout '${this.Timeout}'`);
+                clearTimeout(this.Timeout);
+                Debug.WriteLine(`Creating the new timer in '${ConfigManager.UpdateRate.TotalSeconds}' seconds`);
+                this.Timeout = setTimeout((() => this.UpdateTimer()), ConfigManager.UpdateRate.TotalMilliseconds);
+                break;
         }
     }
     static GetTime(date) {
@@ -238,7 +260,7 @@ class App {
         }
         return timestring;
     }
-    GetDesiredTemperature(weather) {
+    static GetDesiredTemperature(weather) {
         if (ConfigManager.UseFeelsLike) {
             return weather.feels_like;
         }

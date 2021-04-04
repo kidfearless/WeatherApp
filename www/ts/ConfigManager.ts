@@ -16,6 +16,15 @@ export class ConfigManager
 		Config.Set("UseFeelsLike", value);
 	}
 
+	public static get UseCelcius()
+	{
+		return Config.Get<boolean>("UseCelcius", false);
+	}
+	public static set UseCelcius(value: boolean)
+	{
+		Config.Set("UseCelcius", value);
+	}
+
 	public static get AlertPoint()
 	{
 		return Config.Get<number>("AlertPoint", 40.0);

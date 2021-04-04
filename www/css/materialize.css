@@ -2488,7 +2488,7 @@ textarea {
  * 1. Add the correct box sizing in IE 10-.
  * 2. Remove the padding in IE 10-.
  */
-[type="checkbox"],
+/* [type="checkbox"],
 [type="radio"] {
   -webkit-box-sizing: border-box;
           box-sizing: border-box;
@@ -2496,7 +2496,7 @@ textarea {
   padding: 0;
   /* 2 */
 }
-
+ */
 /**
  * Correct the cursor style of increment and decrement buttons in Chrome.
  */
@@ -5610,14 +5610,14 @@ body.keyboard-focused .dropdown-content li:focus {
   background-color: #dadada;
 }
 
-.input-field.col .dropdown-content [type="checkbox"] + label {
+/* .input-field.col .dropdown-content [type="checkbox"] + label {
   top: 1px;
   left: 0;
   height: 18px;
   -webkit-transform: none;
           transform: none;
 }
-
+ */
 .dropdown-trigger {
   cursor: pointer;
 }
@@ -6140,14 +6140,14 @@ textarea.materialize-textarea {
   border-radius: 0;
   outline: none;
   height: 3rem;
-  width: 100%;
+  /* width: 100%; */
   font-size: 16px;
   margin: 0 0 8px 0;
-  padding: 0;
+  /* padding: 0; */
   -webkit-box-shadow: none;
-          box-shadow: none;
+  box-shadow: none;
   -webkit-box-sizing: content-box;
-          box-sizing: content-box;
+  box-sizing: content-box;
   -webkit-transition: border .3s, -webkit-box-shadow .3s;
   transition: border .3s, -webkit-box-shadow .3s;
   transition: box-shadow .3s, border .3s;
@@ -6836,10 +6836,7 @@ textarea.materialize-textarea {
   background-color: rgba(0, 0, 0, 0.42);
   border-color: #949494;
 }
-
-/* Checkboxes
-   ========================================================================== */
-/* Remove default checkbox */
+/* 
 [type="checkbox"]:not(:checked),
 [type="checkbox"]:checked {
   position: absolute;
@@ -6848,7 +6845,7 @@ textarea.materialize-textarea {
 }
 
 [type="checkbox"] {
-  /* checkbox aspect */
+
 }
 
 [type="checkbox"] + span:not(.lever) {
@@ -6924,7 +6921,6 @@ textarea.materialize-textarea {
   border-bottom: 2px solid rgba(0, 0, 0, 0.42);
 }
 
-/* Indeterminate checkbox */
 [type="checkbox"]:indeterminate + span:not(.lever):before {
   top: -11px;
   left: -12px;
@@ -6956,7 +6952,7 @@ textarea.materialize-textarea {
   content: '';
   left: 0;
   position: absolute;
-  /* .1s delay is for check animation */
+
   -webkit-transition: border .25s, background-color .25s, width .20s .1s, height .20s .1s, top .20s .1s, left .20s .1s;
   transition: border .25s, background-color .25s, width .20s .1s, height .20s .1s, top .20s .1s, left .20s .1s;
   z-index: 1;
@@ -7037,7 +7033,7 @@ textarea.materialize-textarea {
   background-color: #949494;
   border-color: #949494;
 }
-
+ */
 /* Switch
    ========================================================================== */
 .switch,
@@ -8486,10 +8482,19 @@ input[type=range]::-ms-thumb {
   visibility: visible;
   -webkit-animation: pulse-animation 1s cubic-bezier(0.24, 0, 0.38, 1) infinite;
           animation: pulse-animation 1s cubic-bezier(0.24, 0, 0.38, 1) infinite;
-  -webkit-transition: opacity .3s, visibility 0s 1s, -webkit-transform .3s;
-  transition: opacity .3s, visibility 0s 1s, -webkit-transform .3s;
-  transition: opacity .3s, transform .3s, visibility 0s 1s;
-  transition: opacity .3s, transform .3s, visibility 0s 1s, -webkit-transform .3s;
+  -webkit-transition: opacity .3s,
+ visibility 0s 1s,
+ -webkit-transform .3s;
+  transition: opacity .3s,
+ visibility 0s 1s,
+ -webkit-transform .3s;
+  transition: opacity .3s,
+ transform .3s,
+ visibility 0s 1s;
+  transition: opacity .3s,
+ transform .3s,
+ visibility 0s 1s,
+ -webkit-transform .3s;
 }
 
 .tap-target {
@@ -8542,10 +8547,19 @@ input[type=range]::-ms-thumb {
 
 .tap-target-wave::after {
   visibility: hidden;
-  -webkit-transition: opacity .3s, visibility 0s, -webkit-transform .3s;
-  transition: opacity .3s, visibility 0s, -webkit-transform .3s;
-  transition: opacity .3s, transform .3s, visibility 0s;
-  transition: opacity .3s, transform .3s, visibility 0s, -webkit-transform .3s;
+  -webkit-transition: opacity .3s,
+ visibility 0s,
+ -webkit-transform .3s;
+  transition: opacity .3s,
+ visibility 0s,
+ -webkit-transform .3s;
+  transition: opacity .3s,
+ transform .3s,
+ visibility 0s;
+  transition: opacity .3s,
+ transform .3s,
+ visibility 0s,
+ -webkit-transform .3s;
   z-index: -1;
 }
 

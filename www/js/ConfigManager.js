@@ -7,6 +7,12 @@ export class ConfigManager {
     static set UseFeelsLike(value) {
         Config.Set("UseFeelsLike", value);
     }
+    static get UseCelcius() {
+        return Config.Get("UseCelcius", false);
+    }
+    static set UseCelcius(value) {
+        Config.Set("UseCelcius", value);
+    }
     static get AlertPoint() {
         return Config.Get("AlertPoint", 40.0);
     }

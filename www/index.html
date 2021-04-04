@@ -17,7 +17,7 @@
 	specific language governing permissions and limitations
 	under the License.
 -->
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 
 	<head>
 		<meta charset="utf-8">
@@ -35,9 +35,11 @@
 
 		<!--Import Google Icon Font-->
 		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-		<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+		<link
+			href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+			rel="stylesheet">
 		<!--Import materialize.css-->
-		<link type="text/css" rel="stylesheet" href="css/materialize.min.css" media="screen,projection" />
+		<link type="text/css" rel="stylesheet" href="css/materialize.css" media="screen,projection" />
 
 		<!--Let browser know website is optimized for mobile-->
 
@@ -47,27 +49,27 @@
 	<body>
 
 		<div class="background-color" id="App">
-			<div id="MainWeather" class="dev-box">
-				<h1 class="dev-box">32℉</h1>
+			<div id="MainWeather">
+				<h1>32℉</h1>
 			</div>
 
 			<div id="HourlyWeather" class="dev-box z-depth-3 card">
-				<div class="dev-box">
+				<div>
 					<div>32℉</div>
 					<img src="http://openweathermap.org/img/wn/01d@2x.png">
 					<div>12 PM</div>
 				</div>
-				<div class="dev-box">
+				<div>
 					<div>32℉</div>
 					<img src="http://openweathermap.org/img/wn/01d@2x.png">
 					<div>12 PM</div>
 				</div>
-				<div class="dev-box">
+				<div>
 					<div>32℉</div>
 					<img src="http://openweathermap.org/img/wn/01d@2x.png">
 					<div>12 PM</div>
 				</div>
-				<div class="dev-box">
+				<div>
 					<div>32℉</div>
 					<img src="http://openweathermap.org/img/wn/01d@2x.png">
 					<div>12 PM</div>
@@ -75,17 +77,23 @@
 			</div>
 			<div id="EstimationBox" class="dev-box card z-depth-3 ">
 				<span>ESTIMATED TIME:</span>
-				<div id="EstimationReport" class="dev-box">
-					<span  class="dev-box">2:30 PM</span>
-					<span class="dev-box">45℉</span>
+				<div id="EstimationReport">
+					<span>2:30 PM</span>
+					<span>45℉</span>
 				</div>
 			</div>
 
 			<div id="SettingsBox" class="dev-box card z-depth-3">
 				<span>SETTINGS</span>
 				<div id="Settings">
-					<span  class="dev-box">Walking Temp: </span>
-					<input type="number" data-BindConfigNumber="AlertPoint" value="45"/>
+					<span>Walking Temp: </span>
+					<input type="number" data-BindConfigNumber="AlertPoint" value="45" />
+
+					<!--  -->
+
+					<span>Use Celcius: </span>
+					<input data-bindconfigbool="UseCelcius" type="checkbox" />
+
 					<!--  -->
 				</div>
 			</div>
@@ -93,7 +101,7 @@
 
 		<script src="js/app.js" type="module"></script>
 		<script src="cordova.js"></script>
-		<script type="text/javascript" src="js/materialize.min.js"></script>
+		<script type="text/javascript" src="js/materialize.js"></script>
 
 	</body>
 

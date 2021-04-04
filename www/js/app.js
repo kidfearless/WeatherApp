@@ -1,6 +1,8 @@
 export var DEBUG = true;
 import { OpenWeatherAPI } from './OpenWeatherMapAPI/openWeatherAPI.js';
+import { WeatherUnits } from "./OpenWeatherMapAPI/weatherUnits.js";
 import { NotificationManager } from "./INotificationManager.js";
+import { LanguageCode } from "./OpenWeatherMapAPI/languageCode.js";
 import * as GeoLocation from "./GeoLocationExtensions.js";
 import { DateTime } from "./datetime.js";
 import { EventManager } from './EventManager.js';
@@ -29,8 +31,12 @@ class App {
     BindValues() {
         let numberBindings = document.querySelectorAll(`*[data-bindconfignumber]`);
         numberBindings.forEach((element) => {
+            let property = element.dataset["bindconfignumber"];
+            if (ConfigManager[property]) {
+                Debug.WriteLine(`Assigning element '${element.id}' to value '${ConfigManager[property]}'`);
+                element.value = `${ConfigManager[property]}`;
+            }
             element.addEventListener("input", (ev) => {
-                let property = element.dataset["bindconfignumber"];
                 let value = new Number(element.value).valueOf();
                 Debug.WriteLine(`assigning prop '${property}' to value '${value}'`);
                 let type = typeof (ConfigManager[property]);
@@ -42,13 +48,34 @@ class App {
         });
         let stringBindings = document.querySelectorAll(`*[data-bindconfig]`);
         stringBindings.forEach((element) => {
+            let property = element.dataset["bindconfignumber"];
+            if (ConfigManager[property]) {
+                Debug.WriteLine(`Assigning element '${element.id}' to value '${ConfigManager[property]}'`);
+                element.value = ConfigManager[property];
+            }
             element.addEventListener("input", (ev) => {
-                let property = element.dataset["bindconfignumber"];
                 let value = element.value;
                 Debug.WriteLine(`assigning prop '${property}' to value '${value}'`);
                 let type = typeof (ConfigManager[property]);
-                if (type !== "number" && type !== "undefined") {
+                if (type !== "string" && type !== "undefined") {
                     throw new Error(`Attempted to assign numerical value to non numberical type ${type} \`ConfigManager.${property} = ${value}\``);
+                }
+                ConfigManager[property] = value;
+            });
+        });
+        let boolBindings = document.querySelectorAll(`*[data-bindconfigbool]`);
+        boolBindings.forEach((element) => {
+            let property = element.dataset["bindconfigbool"];
+            if (ConfigManager[property]) {
+                Debug.WriteLine(`Assigning element '${element.id}' to value '${ConfigManager[property]}'`);
+                element.checked = ConfigManager[property];
+            }
+            element.addEventListener("input", (ev) => {
+                let value = element.checked;
+                Debug.WriteLine(`assigning prop '${property}' to value '${value}'`);
+                let type = typeof (ConfigManager[property]);
+                if (type !== "boolean" && type !== "undefined") {
+                    throw new Error(`Attempted to assign numerical value to non boolean type ${type} \`ConfigManager.${property} = ${value}\``);
                 }
                 ConfigManager[property] = value;
             });
@@ -76,7 +103,21 @@ class App {
         }
     }
     Timer_Ticked() {
-        return;
+        let position = ConfigManager.CurrentPosition;
+        if (!position) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                this.PositionRetrieved.Invoke(position);
+                ConfigManager.CurrentPosition = GeoLocation.Clone(position);
+            });
+            return;
+        }
+        this.GetNewPosition(position);
+        this.WeatherAPI.GetCurrentWeatherAsync(position.coords.latitude, position.coords.longitude, WeatherUnits.Imperial, LanguageCode.EN)
+            .then(weather => this.WeatherRetrieved.Invoke(weather));
+        this.WeatherAPI.GetWeatherForecastAsync(position.coords.latitude, position.coords.longitude, WeatherUnits.Imperial, LanguageCode.EN)
+            .then(forecast => this.ForeCastRetrieved.Invoke(forecast));
+        Debug.WriteLine(`lat: ${position.coords.latitude} lon: ${position.coords.longitude}`);
+        this.CheckWeather();
     }
     CheckWeather() {
         let weather = ConfigManager.CurrentWeather;
@@ -88,7 +129,7 @@ class App {
         }
         if (this.GetDesiredTemperature(weather.main) >= ConfigManager.AlertPoint) {
             this.GoodWeatherAlerted.Invoke();
-            NotificationManager.PushNotification("Time for your walk", `It's currently ${weather.main.temp} ℉ and a perfect time for a walk`);
+            NotificationManager.PushNotification("Time for your walk 🏃", `It's currently ${weather.main.temp} ℉ and a perfect time for a walk`);
             ConfigManager.LastAlertDate = DateTime.Today;
         }
     }

@@ -77,16 +77,23 @@ class App
 		this.ForeCastRetrieved.Add(this.OnForecastRetrieved.bind(this));
 		this.WeatherRetrieved.Add(this.OnWeatherRetreived.bind(this));
 	}
+
+	// iterates through all the elements that have a data binding, assigning them the cached values and listening for changes
 	private BindValues()
 	{
 		let numberBindings = document.querySelectorAll(`*[data-bindconfignumber]`);
 
 		numberBindings.forEach((element:HTMLInputElement) => 
 		{
+			// get the property that we're binding to, it's not undefined otherwise we wouldn't have gotten here
+			let property:string = element.dataset["bindconfignumber"] as string;
+			if(ConfigManager[property])
+			{
+				Debug.WriteLine(`Assigning element '${element.id}' to value '${ConfigManager[property]}'`);
+				element.value = `${ConfigManager[property]}`;
+			}
 			element.addEventListener("input", (ev:InputEvent) =>
 			{
-				// get the property that we're binding to, it's not undefined otherwise we wouldn't have gotten here
-				let property:string = element.dataset["bindconfignumber"] as string;
 				// a bit weird, but we can't confirm if this is float or int
 				// so create a new number from the string and then get it's primitive underlying type
 				let value = new Number(element.value).valueOf();
@@ -101,7 +108,6 @@ class App
 				}
 
 				ConfigManager[property] = value;
-				//@ts-ignore
 			});
 		});
 
@@ -109,11 +115,15 @@ class App
 
 		stringBindings.forEach((element:HTMLInputElement) => 
 		{
+			// get the property that we're binding to, it's not undefined otherwise we wouldn't have gotten here
+			let property:string = element.dataset["bindconfignumber"] as string;
+			if(ConfigManager[property])
+			{
+				Debug.WriteLine(`Assigning element '${element.id}' to value '${ConfigManager[property]}'`);
+				element.value = ConfigManager[property];
+			}
 			element.addEventListener("input", (ev:InputEvent) =>
 			{
-				// get the property that we're binding to, it's not undefined otherwise we wouldn't have gotten here
-				let property:string = element.dataset["bindconfignumber"] as string;
-				
 				// don't really need to validate it as the value *should* always be a string
 				let value = element.value;
 
@@ -121,15 +131,45 @@ class App
 
 				// not likely to happen but if we ever accidentally use bindconfignumber for non numeric value then we should be alerted
 				let type = typeof(ConfigManager[property]);
-				if(type !== "number" && type !== "undefined")
+				if(type !== "string" && type !== "undefined")
 				{
 					throw new Error(`Attempted to assign numerical value to non numberical type ${type} \`ConfigManager.${property} = ${value}\``);
 				}
 
 				ConfigManager[property] = value;
-				//@ts-ignore
 			});
 		});
+		
+		let boolBindings = document.querySelectorAll(`*[data-bindconfigbool]`);
+		boolBindings.forEach((element:HTMLInputElement) => 
+		{
+			// get the property that we're binding to, it's not undefined otherwise we wouldn't have gotten here
+			let property:string = element.dataset["bindconfigbool"] as string;
+			if(ConfigManager[property])
+			{
+				Debug.WriteLine(`Assigning element '${element.id}' to value '${ConfigManager[property]}'`);
+				element.checked = ConfigManager[property];
+			}
+			element.addEventListener("input", (ev:InputEvent) =>
+			{
+				
+				// all input elements have a checked property, so we have to have a separate one for checkboxes
+				let value = element.checked;
+
+				Debug.WriteLine(`assigning prop '${property}' to value '${value}'`);
+
+				// not likely to happen but if we ever accidentally use bindconfignumber for non numeric value then we should be alerted
+				let type = typeof(ConfigManager[property]);
+				if(type !== "boolean" && type !== "undefined")
+				{
+					throw new Error(`Attempted to assign numerical value to non boolean type ${type} \`ConfigManager.${property} = ${value}\``);
+				}
+
+				ConfigManager[property] = value;
+			});
+		});
+
+
 	}
 	private LoadSavedData()
 	{
@@ -168,8 +208,8 @@ class App
 	 */
 	private Timer_Ticked()
 	{
-		return;
-		/* // get the current position
+		// return;
+		 // get the current position
 		let position = ConfigManager.CurrentPosition;
 		// if it's null then update and return early
 		if (!position)
@@ -195,10 +235,9 @@ class App
 			WeatherUnits.Imperial, LanguageCode.EN)
 			.then(forecast => this.ForeCastRetrieved.Invoke(forecast));
 
-		console.log(`lat: ${position.coords.latitude} lon: ${position.coords.longitude}`);
-
+		Debug.WriteLine(`lat: ${position.coords.latitude} lon: ${position.coords.longitude}`);
 		// Check if we should alert them of these changes yet or not
-		this.CheckWeather(); */
+		this.CheckWeather(); 
 	}
 
 	/**
@@ -221,7 +260,7 @@ class App
 		if (this.GetDesiredTemperature(weather.main) >= ConfigManager.AlertPoint)
 		{
 			this.GoodWeatherAlerted.Invoke();
-			NotificationManager.PushNotification("Time for your walk", `It's currently ${weather.main.temp} ℉ and a perfect time for a walk`);
+			NotificationManager.PushNotification("Time for your walk 🏃", `It's currently ${weather.main.temp} ℉ and a perfect time for a walk`);
 			ConfigManager.LastAlertDate = DateTime.Today;
 		}
 	}

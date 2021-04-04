@@ -40,12 +40,11 @@ class App
 	public ForeCastRetrieved: EventManager<OneCallResponse>;
 	public PositionRetrieved: EventManager<GeolocationPosition>;
 	public GoodWeatherAlerted: EventManager;
+	// fired the config has been updated with the new values
+	// passes the changed property in it's parameter
+	public DataBindingUpdated: EventManager<string>;
 	//#endregion
 
-	//#region Config Wrappers
-
-
-	//#endregion
 
 	/**
 	 * Initializes the fields with either the default values or with their corresponding elements
@@ -72,10 +71,12 @@ class App
 		this.ForeCastRetrieved = new EventManager();
 		this.PositionRetrieved = new EventManager();
 		this.GoodWeatherAlerted = new EventManager();
+		this.DataBindingUpdated = new EventManager();
 
 
 		this.ForeCastRetrieved.Add(this.OnForecastRetrieved.bind(this));
 		this.WeatherRetrieved.Add(this.OnWeatherRetreived.bind(this));
+		this.DataBindingUpdated.Add(this.OnDataBindingUpdated.bind(this))
 	}
 
 	// iterates through all the elements that have a data binding, assigning them the cached values and listening for changes
@@ -108,6 +109,7 @@ class App
 				}
 
 				ConfigManager[property] = value;
+				this.DataBindingUpdated.Invoke(property);
 			});
 		});
 
@@ -137,6 +139,7 @@ class App
 				}
 
 				ConfigManager[property] = value;
+				this.DataBindingUpdated.Invoke(property);
 			});
 		});
 		
@@ -166,6 +169,7 @@ class App
 				}
 
 				ConfigManager[property] = value;
+				this.DataBindingUpdated.Invoke(property);
 			});
 		});
 
@@ -208,36 +212,41 @@ class App
 	 */
 	private Timer_Ticked()
 	{
+		this.UpdateWeather();
+	}
+
+	private UpdateWeather()
+	{
 		// return;
 		 // get the current position
-		let position = ConfigManager.CurrentPosition;
-		// if it's null then update and return early
-		if (!position)
-		{
-			navigator.geolocation.getCurrentPosition((position: GeolocationPosition) => 
-			{
-				this.PositionRetrieved.Invoke(position);
-				ConfigManager.CurrentPosition = GeoLocation.Clone(position);
-			});
-			return;
-		}
-
-		// Update the position if needed
-		this.GetNewPosition(position);
-
-		// get the current weather
-		this.WeatherAPI.GetCurrentWeatherAsync(position.coords.latitude,
-			position.coords.longitude, WeatherUnits.Imperial, LanguageCode.EN)
-			.then(weather => this.WeatherRetrieved.Invoke(weather));
-
-		// 
-		this.WeatherAPI.GetWeatherForecastAsync(position.coords.latitude, position.coords.longitude,
-			WeatherUnits.Imperial, LanguageCode.EN)
-			.then(forecast => this.ForeCastRetrieved.Invoke(forecast));
-
-		Debug.WriteLine(`lat: ${position.coords.latitude} lon: ${position.coords.longitude}`);
-		// Check if we should alert them of these changes yet or not
-		this.CheckWeather(); 
+		 let position = ConfigManager.CurrentPosition;
+		 // if it's null then update and return early
+		 if (!position)
+		 {
+			 navigator.geolocation.getCurrentPosition((position: GeolocationPosition) => 
+			 {
+				 this.PositionRetrieved.Invoke(position);
+				 ConfigManager.CurrentPosition = GeoLocation.Clone(position);
+			 });
+			 return;
+		 }
+ 
+		 // Update the position if needed
+		 this.GetNewPosition(position);
+ 
+		 // get the current weather
+		 this.WeatherAPI.GetCurrentWeatherAsync(position.coords.latitude,
+			 position.coords.longitude, ConfigManager.WeatherUnits, LanguageCode.EN)
+			 .then(weather => this.WeatherRetrieved.Invoke(weather));
+ 
+		 // 
+		 this.WeatherAPI.GetWeatherForecastAsync(position.coords.latitude, position.coords.longitude,
+			 ConfigManager.WeatherUnits, LanguageCode.EN)
+			 .then(forecast => this.ForeCastRetrieved.Invoke(forecast));
+ 
+		 Debug.WriteLine(`lat: ${position.coords.latitude} lon: ${position.coords.longitude}`);
+		 // Check if we should alert them of these changes yet or not
+		 this.CheckWeather(); 
 	}
 
 	/**
@@ -260,7 +269,7 @@ class App
 		if (this.GetDesiredTemperature(weather.main) >= ConfigManager.AlertPoint)
 		{
 			this.GoodWeatherAlerted.Invoke();
-			NotificationManager.PushNotification("Time for your walk 🏃", `It's currently ${weather.main.temp} ℉ and a perfect time for a walk`);
+			NotificationManager.PushNotification("Time for your walk 🏃", `It's currently ${weather.main.temp} ${ConfigManager.DegreesSymbol} and a perfect time for a walk`);
 			ConfigManager.LastAlertDate = DateTime.Today;
 		}
 	}
@@ -274,7 +283,7 @@ class App
 		let lastPositionTime = DateTime.FromJSTimestamp(position.timestamp);
 		let diff = DateTime.Now.Subtract(lastPositionTime);
 
-		console.log(`Seconds Since Last Location: ` + diff.TotalSeconds);
+		Debug.WriteLine(`Seconds Since Last Location: ` + diff.TotalSeconds);
 		if (diff.TotalHours >= 1)
 		{
 			navigator.geolocation.getCurrentPosition((position: GeolocationPosition) =>
@@ -323,7 +332,7 @@ class App
 			}
 
 			return `<div>
-						<div>${weather.temp.toFixed(1)}℉</div>
+						<div>${weather.temp.toFixed(1)}${ConfigManager.DegreesSymbol}</div>
 						<img src="${OpenWeatherIcons.get(weather.weather[0].icon)}" class="weather-svg" />
 						<div>${timestring}</div>
 					</div>`;
@@ -364,13 +373,13 @@ class App
 			let date = DateTime.FromUTCTimeStamp(bestReport.dt);
 			this.EstimationReport.innerHTML = `
 			<span class="dev-box">${App.GetTime(date)}</span>
-			<span class="dev-box">${bestReport.temp.toFixed(0)}℉</span>`;
+			<span class="dev-box">${bestReport.temp.toFixed(0)}${ConfigManager.DegreesSymbol}</span>`;
 		}
 		else
 		{
 			this.EstimationReport.innerHTML = `
-			<span class="dev-box">N/A</span>
-			<span class="dev-box">${ConfigManager.CurrentWeather?.main.temp ?? "N/A"}℉</span>`;
+			<span class="dev-box">Now</span>
+			<span class="dev-box">${ConfigManager.CurrentWeather?.main.temp ?? "N/A"}${ConfigManager.DegreesSymbol}</span>`;
 		}
 
 	}
@@ -379,13 +388,22 @@ class App
 	private GenerateCurrentWeather(weather: CurrentWeather)
 	{
 		// might seem silly to put this single line in a function, it's just to match the naming of the other generate functions
-		this.MainWeather.innerHTML = `<h1 class="dev-box">${weather.main.temp.toFixed(0)}℉</h1>`;
+		this.MainWeather.innerHTML = `<h1 class="dev-box">${weather.main.temp.toFixed(0)}${ConfigManager.DegreesSymbol}</h1>`;
 	}
 
 	private OnWeatherRetreived(weather: CurrentWeather)
 	{
 		ConfigManager.CurrentWeather = weather;
 		this.GenerateCurrentWeather(weather);
+	}
+
+	private OnDataBindingUpdated(property:string)
+	{
+		// Trigger a weather update when they switch to/from celcius so that we don't have to wait the full time for the changes to take place
+		if(property === "UseCelcius")
+		{
+			this.UpdateWeather();
+		}
 	}
 
 

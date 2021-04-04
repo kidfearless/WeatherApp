@@ -2,6 +2,7 @@ import { Config } from "./Implementations/BrowserConfig.js";
 import { DateTime, TimeSpan } from "./datetime.js";
 import { CurrentWeather } from "./OpenWeatherMapAPI/currentWeather.js";
 import { OneCallResponse } from './OpenWeatherMapAPI/oneCall.js';
+import { WeatherUnits } from "./OpenWeatherMapAPI/weatherUnits.js";
 
 
 export class ConfigManager
@@ -24,6 +25,16 @@ export class ConfigManager
 	{
 		Config.Set("UseCelcius", value);
 	}
+
+	public static get WeatherUnits()
+	{
+		return ConfigManager.UseCelcius ? WeatherUnits.Metric : WeatherUnits.Imperial;
+	}
+	public static get DegreesSymbol():string
+	{
+		return ConfigManager.UseCelcius ? "°C" : "°F";
+	}
+
 
 	public static get AlertPoint()
 	{

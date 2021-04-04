@@ -1,5 +1,6 @@
 import { Config } from "./Implementations/BrowserConfig.js";
 import { DateTime, TimeSpan } from "./datetime.js";
+import { WeatherUnits } from "./OpenWeatherMapAPI/weatherUnits.js";
 export class ConfigManager {
     static get UseFeelsLike() {
         return Config.Get("UseFeelsLike", false);
@@ -12,6 +13,12 @@ export class ConfigManager {
     }
     static set UseCelcius(value) {
         Config.Set("UseCelcius", value);
+    }
+    static get WeatherUnits() {
+        return ConfigManager.UseCelcius ? WeatherUnits.Metric : WeatherUnits.Imperial;
+    }
+    static get DegreesSymbol() {
+        return ConfigManager.UseCelcius ? "°C" : "°F";
     }
     static get AlertPoint() {
         return Config.Get("AlertPoint", 40.0);

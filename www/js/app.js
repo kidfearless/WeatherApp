@@ -1,6 +1,5 @@
 export var DEBUG = true;
 import { OpenWeatherAPI } from './OpenWeatherMapAPI/openWeatherAPI.js';
-import { WeatherUnits } from "./OpenWeatherMapAPI/weatherUnits.js";
 import { NotificationManager } from "./INotificationManager.js";
 import { LanguageCode } from "./OpenWeatherMapAPI/languageCode.js";
 import * as GeoLocation from "./GeoLocationExtensions.js";
@@ -25,8 +24,10 @@ class App {
         this.ForeCastRetrieved = new EventManager();
         this.PositionRetrieved = new EventManager();
         this.GoodWeatherAlerted = new EventManager();
+        this.DataBindingUpdated = new EventManager();
         this.ForeCastRetrieved.Add(this.OnForecastRetrieved.bind(this));
         this.WeatherRetrieved.Add(this.OnWeatherRetreived.bind(this));
+        this.DataBindingUpdated.Add(this.OnDataBindingUpdated.bind(this));
     }
     BindValues() {
         let numberBindings = document.querySelectorAll(`*[data-bindconfignumber]`);
@@ -44,6 +45,7 @@ class App {
                     throw new Error(`Attempted to assign numerical value to non numberical type ${type} \`ConfigManager.${property} = ${value}\``);
                 }
                 ConfigManager[property] = value;
+                this.DataBindingUpdated.Invoke(property);
             });
         });
         let stringBindings = document.querySelectorAll(`*[data-bindconfig]`);
@@ -61,6 +63,7 @@ class App {
                     throw new Error(`Attempted to assign numerical value to non numberical type ${type} \`ConfigManager.${property} = ${value}\``);
                 }
                 ConfigManager[property] = value;
+                this.DataBindingUpdated.Invoke(property);
             });
         });
         let boolBindings = document.querySelectorAll(`*[data-bindconfigbool]`);
@@ -78,6 +81,7 @@ class App {
                     throw new Error(`Attempted to assign numerical value to non boolean type ${type} \`ConfigManager.${property} = ${value}\``);
                 }
                 ConfigManager[property] = value;
+                this.DataBindingUpdated.Invoke(property);
             });
         });
     }
@@ -103,6 +107,9 @@ class App {
         }
     }
     Timer_Ticked() {
+        this.UpdateWeather();
+    }
+    UpdateWeather() {
         let position = ConfigManager.CurrentPosition;
         if (!position) {
             navigator.geolocation.getCurrentPosition((position) => {
@@ -112,9 +119,9 @@ class App {
             return;
         }
         this.GetNewPosition(position);
-        this.WeatherAPI.GetCurrentWeatherAsync(position.coords.latitude, position.coords.longitude, WeatherUnits.Imperial, LanguageCode.EN)
+        this.WeatherAPI.GetCurrentWeatherAsync(position.coords.latitude, position.coords.longitude, ConfigManager.WeatherUnits, LanguageCode.EN)
             .then(weather => this.WeatherRetrieved.Invoke(weather));
-        this.WeatherAPI.GetWeatherForecastAsync(position.coords.latitude, position.coords.longitude, WeatherUnits.Imperial, LanguageCode.EN)
+        this.WeatherAPI.GetWeatherForecastAsync(position.coords.latitude, position.coords.longitude, ConfigManager.WeatherUnits, LanguageCode.EN)
             .then(forecast => this.ForeCastRetrieved.Invoke(forecast));
         Debug.WriteLine(`lat: ${position.coords.latitude} lon: ${position.coords.longitude}`);
         this.CheckWeather();
@@ -129,14 +136,14 @@ class App {
         }
         if (this.GetDesiredTemperature(weather.main) >= ConfigManager.AlertPoint) {
             this.GoodWeatherAlerted.Invoke();
-            NotificationManager.PushNotification("Time for your walk 🏃", `It's currently ${weather.main.temp} ℉ and a perfect time for a walk`);
+            NotificationManager.PushNotification("Time for your walk 🏃", `It's currently ${weather.main.temp} ${ConfigManager.DegreesSymbol} and a perfect time for a walk`);
             ConfigManager.LastAlertDate = DateTime.Today;
         }
     }
     GetNewPosition(position) {
         let lastPositionTime = DateTime.FromJSTimestamp(position.timestamp);
         let diff = DateTime.Now.Subtract(lastPositionTime);
-        console.log(`Seconds Since Last Location: ` + diff.TotalSeconds);
+        Debug.WriteLine(`Seconds Since Last Location: ` + diff.TotalSeconds);
         if (diff.TotalHours >= 1) {
             navigator.geolocation.getCurrentPosition((position) => {
                 this.PositionRetrieved.Invoke(position);
@@ -166,7 +173,7 @@ class App {
                 timestring = `${date.Hour - 12} PM`;
             }
             return `<div>
-						<div>${weather.temp.toFixed(1)}℉</div>
+						<div>${weather.temp.toFixed(1)}${ConfigManager.DegreesSymbol}</div>
 						<img src="${OpenWeatherIcons.get(weather.weather[0].icon)}" class="weather-svg" />
 						<div>${timestring}</div>
 					</div>`;
@@ -195,20 +202,25 @@ class App {
             let date = DateTime.FromUTCTimeStamp(bestReport.dt);
             this.EstimationReport.innerHTML = `
 			<span class="dev-box">${App.GetTime(date)}</span>
-			<span class="dev-box">${bestReport.temp.toFixed(0)}℉</span>`;
+			<span class="dev-box">${bestReport.temp.toFixed(0)}${ConfigManager.DegreesSymbol}</span>`;
         }
         else {
             this.EstimationReport.innerHTML = `
-			<span class="dev-box">N/A</span>
-			<span class="dev-box">${(_b = (_a = ConfigManager.CurrentWeather) === null || _a === void 0 ? void 0 : _a.main.temp) !== null && _b !== void 0 ? _b : "N/A"}℉</span>`;
+			<span class="dev-box">Now</span>
+			<span class="dev-box">${(_b = (_a = ConfigManager.CurrentWeather) === null || _a === void 0 ? void 0 : _a.main.temp) !== null && _b !== void 0 ? _b : "N/A"}${ConfigManager.DegreesSymbol}</span>`;
         }
     }
     GenerateCurrentWeather(weather) {
-        this.MainWeather.innerHTML = `<h1 class="dev-box">${weather.main.temp.toFixed(0)}℉</h1>`;
+        this.MainWeather.innerHTML = `<h1 class="dev-box">${weather.main.temp.toFixed(0)}${ConfigManager.DegreesSymbol}</h1>`;
     }
     OnWeatherRetreived(weather) {
         ConfigManager.CurrentWeather = weather;
         this.GenerateCurrentWeather(weather);
+    }
+    OnDataBindingUpdated(property) {
+        if (property === "UseCelcius") {
+            this.UpdateWeather();
+        }
     }
     static GetTime(date) {
         let timestring = ``;

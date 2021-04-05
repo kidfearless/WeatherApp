@@ -1,4 +1,4 @@
-import { Config } from "./Implementations/BrowserConfig.js";
+import { Config } from "./IConfig.js";
 import { DateTime, TimeSpan } from "./datetime.js";
 import { WeatherUnits } from "./OpenWeatherMapAPI/weatherUnits.js";
 export class ConfigManager {

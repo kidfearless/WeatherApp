@@ -3,22 +3,27 @@ import { OpenWeatherAPI } from './OpenWeatherMapAPI/openWeatherAPI.js';
 import { NotificationManager } from "./INotificationManager.js";
 import { LanguageCode } from "./OpenWeatherMapAPI/languageCode.js";
 import * as GeoLocation from "./GeoLocationExtensions.js";
-import { DateTime } from "./datetime.js";
+import { DateTime, TimeSpan } from "./datetime.js";
 import { EventManager } from './EventManager.js';
 import { Debug } from './Debug.js';
 import { OpenWeatherIcons } from './OpenWeatherIcons.js';
 import { ConfigManager } from "./ConfigManager.js";
-import { OpenWeathApiKey as OpenWeatherApiKey } from "./Secrets.js";
+import { OpenWeatherApiKey } from "./Secrets.js";
 class App {
     constructor() {
+        this.UpdateRate = TimeSpan.FromSeconds(100);
         this.Timer = undefined;
         this.Timeout = undefined;
+        this.BoundValues = false;
         this.WeatherAPI = new OpenWeatherAPI(OpenWeatherApiKey);
         this.MainWeather = document.getElementById("MainWeather");
         this.RootElement = document.getElementById("App");
         this.HourlyWeather = document.getElementById("HourlyWeather");
         this.EstimationReport = document.getElementById("EstimationReport");
         this.SettingsBox = document.getElementById("SettingsBox");
+        let tickButton = document.getElementById("TickButton");
+        tickButton.onclick = () => this.Timer_Ticked();
+        this.GeoLocation = navigator.geolocation;
         this.BindValues();
         this.LoadSavedData();
         this.WeatherRetrieved = new EventManager();
@@ -31,6 +36,10 @@ class App {
         this.DataBindingUpdated.Add(this.OnDataBindingUpdated.bind(this));
     }
     BindValues() {
+        if (this.BoundValues) {
+            return;
+        }
+        this.BoundValues = true;
         let numberBindings = document.querySelectorAll(`*[data-bindconfignumber]`);
         numberBindings.forEach((element) => {
             let property = element.dataset["bindconfignumber"];
@@ -106,33 +115,29 @@ class App {
     }
     UpdateTimer() {
         if (!this.Timer) {
-            Debug.WriteLine(`assigning timer update rate to fire every ${ConfigManager.UpdateRate.TotalSeconds} seconds`);
-            this.Timer = setInterval(this.Timer_Ticked.bind(this), ConfigManager.UpdateRate.TotalMilliseconds);
-            this.Timer_Ticked();
+            Debug.WriteLine(`Assigning timer update rate to fire every ${this.UpdateRate.TotalSeconds} seconds`);
+            this.Timer = setInterval(this.Timer_Ticked.bind(this), this.UpdateRate.TotalMilliseconds);
+            this.UpdateWeather();
         }
         else {
             Debug.WriteLine("Timer was not null when assigning it");
         }
     }
     Timer_Ticked() {
+        Debug.WriteLine("Timer Ticked");
         this.UpdateWeather();
     }
     UpdateWeather() {
-        let position = ConfigManager.CurrentPosition;
-        if (!position) {
-            navigator.geolocation.getCurrentPosition((position) => {
-                this.PositionRetrieved.Invoke(position);
-                ConfigManager.CurrentPosition = GeoLocation.Clone(position);
-            });
+        if (!this.GetNewPosition()) {
             return;
         }
-        this.GetNewPosition(position);
-        this.WeatherAPI.GetCurrentWeatherAsync(position.coords.latitude, position.coords.longitude, ConfigManager.WeatherUnits, LanguageCode.EN)
-            .then(weather => this.WeatherRetrieved.Invoke(weather));
+        let position = ConfigManager.CurrentPosition;
         this.WeatherAPI.GetWeatherForecastAsync(position.coords.latitude, position.coords.longitude, ConfigManager.WeatherUnits, LanguageCode.EN)
             .then(forecast => this.ForeCastRetrieved.Invoke(forecast));
-        Debug.WriteLine(`lat: ${position.coords.latitude} lon: ${position.coords.longitude}`);
+        Debug.WriteLine(`Current Position: {lat: ${position.coords.latitude} lon: ${position.coords.longitude}}`);
         this.CheckWeather();
+    }
+    newMethod() {
     }
     CheckWeather() {
         let weather = ConfigManager.CurrentWeather;
@@ -148,16 +153,31 @@ class App {
             ConfigManager.LastAlertDate = DateTime.Today;
         }
     }
-    GetNewPosition(position) {
+    GetNewPosition() {
+        let pingLocation = () => {
+            this.GeoLocation.getCurrentPosition((position) => {
+                Debug.WriteLine(`Successfully grabbed current location. ${JSON.stringify(position)}`, position);
+                this.PositionRetrieved.Invoke(position);
+                ConfigManager.CurrentPosition = GeoLocation.Clone(position);
+            }, (error) => {
+                Debug.WriteLine(`Falied to grab current position. Reason: ${error.message}`);
+                Debug.WriteLine(error);
+            });
+        };
+        let position = ConfigManager.CurrentPosition;
+        if (!position) {
+            Debug.WriteLine("Position null... Retreiving current position...");
+            pingLocation();
+            return false;
+        }
         let lastPositionTime = DateTime.FromJSTimestamp(position.timestamp);
         let diff = DateTime.Now.Subtract(lastPositionTime);
         Debug.WriteLine(`Seconds Since Last Location: ` + diff.TotalSeconds);
         if (diff.TotalHours >= 1) {
-            navigator.geolocation.getCurrentPosition((position) => {
-                this.PositionRetrieved.Invoke(position);
-                ConfigManager.CurrentPosition = GeoLocation.Clone(position);
-            });
+            Debug.WriteLine("Location data out of date pulling new data now...");
+            pingLocation();
         }
+        return true;
     }
     OnForecastRetrieved(data) {
         ConfigManager.SavedForecast = data;
@@ -230,17 +250,13 @@ class App {
                 this.UpdateWeather();
                 break;
             case "UseFeelsLike":
-                this.GenerateCurrentWeather(ConfigManager.CurrentWeather);
-                this.GenerateForecast(ConfigManager.SavedForecast);
-                this.GenerateWalkTime(ConfigManager.SavedForecast);
-            case "UpdateRateInSeconds":
-                Debug.WriteLine(`Clearing timer '${this.Timer}'`);
-                clearInterval(this.Timer);
-                this.Timer = undefined;
-                Debug.WriteLine(`Clearing timeout '${this.Timeout}'`);
-                clearTimeout(this.Timeout);
-                Debug.WriteLine(`Creating the new timer in '${ConfigManager.UpdateRate.TotalSeconds}' seconds`);
-                this.Timeout = setTimeout((() => this.UpdateTimer()), ConfigManager.UpdateRate.TotalMilliseconds);
+                if (ConfigManager.CurrentWeather) {
+                    this.GenerateCurrentWeather(ConfigManager.CurrentWeather);
+                }
+                if (ConfigManager.SavedForecast) {
+                    this.GenerateForecast(ConfigManager.SavedForecast);
+                    this.GenerateWalkTime(ConfigManager.SavedForecast);
+                }
                 break;
         }
     }
@@ -271,4 +287,7 @@ class App {
 }
 const app = new App();
 document.addEventListener('deviceready', () => app.OnReady());
+if (DEBUG) {
+    window["Application"] = app;
+}
 //# sourceMappingURL=app.js.map

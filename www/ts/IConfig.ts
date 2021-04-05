@@ -4,31 +4,42 @@ import { DEBUG } from './app.js';
 export interface IConfig
 {
 	Get<T>(source: string): T;
-	Get<T>(source: string, defaultValue: T|null): T;
+	Get<T>(source: string, defaultValue: T | null): T;
 	Set(source: string, value: any): void;
 }
 
-export let Config: IConfig;
+export var Config: IConfig;
 
-document.addEventListener("deviceready", () =>
+if (DEBUG)
 {
-	if(DEBUG)
-	{
-		Config = new DebugConfig();
-		return;
-	}
+	Config = new DebugConfig();
+}
+else
+{
+	Config = new BrowserConfig();
+}
 
-	// @ts-ignore
-	if(cordova.platformId === "browser")
-	{
-		Config = new BrowserConfig();
-	}
-	// @ts-ignore
-	else if(cordova.platformId === "Android")
-	{
+// it looks like cordova uses the same properties and methods for storing stuff as the browser so this stuff wasn't needed.
+// document.addEventListener("deviceready", () =>
+// {
+// 	if (DEBUG)
+// 	{
+// 		Config = new DebugConfig();
+// 		return;
+// 	}
 
-	}
-}, false);
+// 	// @ts-ignore
+// 	if (cordova.platformId === "browser")
+// 	{
+// 		Config = new BrowserConfig();
+// 	}
+// 	// @ts-ignore
+// 	else if (cordova.platformId === "Android")
+// 	{
+// 		// 
+// 		Config = new BrowserConfig();
+// 	}
+// }, false);
 
 
 

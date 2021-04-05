@@ -23,8 +23,8 @@ body
 #App
 {
 	margin: auto;
-	height: 746px;
-	width: 408px;
+	/* height: 746px;
+	width: 408px; */
 	padding: 8px;
 	box-sizing: border-box;
 }

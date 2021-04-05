@@ -76,7 +76,7 @@
 				</div>
 			</div>
 			<div id="EstimationBox" class="dev-box card z-depth-3 ">
-				<span>ESTIMATED TIME:</span>
+				<span>ESTIMATED TIME</span>
 				<div id="EstimationReport">
 					<span>2:30 PM</span>
 					<span>45℉</span>
@@ -91,9 +91,9 @@
 
 					<!--  -->
 
-					<span>Update Rate</span>
+					<!-- <span>Update Rate</span>
 					<input type="number" data-BindConfigNumber="UpdateRateInSeconds" value="60" />
-					
+					 -->
 					<!--  -->
 					
 					<span>Use Celcius</span>
@@ -105,6 +105,10 @@
 				</div>
 			</div>
 		</div>
+		<button id="TickButton" class="waves-effect waves-light btn-large" style="width: 100%;">
+			Tick
+		</button>
+		<pre id="ConsoleElement" style="background-color: black; color: white;width: 100%; height: 512px; overflow: scroll;"></pre>
 
 		<script src="js/app.js" type="module"></script>
 		<script type="text/javascript" src="cordova.js"></script>

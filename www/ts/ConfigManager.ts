@@ -1,7 +1,7 @@
-import { Config } from "./Implementations/BrowserConfig.js";
+import { Config } from "./IConfig.js";
 import { DateTime, TimeSpan } from "./datetime.js";
 import { CurrentWeather } from "./OpenWeatherMapAPI/currentWeather.js";
-import { OneCallResponse } from './OpenWeatherMapAPI/oneCall.js';
+import { OneCallResponse, WeatherReport } from './OpenWeatherMapAPI/oneCall.js';
 import { WeatherUnits } from "./OpenWeatherMapAPI/weatherUnits.js";
 
 
@@ -84,11 +84,11 @@ export class ConfigManager
 		Config.Set("CurrentPosition", value);
 	}
 
-	public static get CurrentWeather(): CurrentWeather | null
+	public static get CurrentWeather(): WeatherReport | null
 	{
-		return Config.Get<CurrentWeather>("CurrentWeather");
+		return Config.Get<WeatherReport>("CurrentWeather");
 	}
-	public static set CurrentWeather(value: CurrentWeather | null)
+	public static set CurrentWeather(value: WeatherReport | null)
 	{
 		Config.Set("CurrentWeather", value);
 	}

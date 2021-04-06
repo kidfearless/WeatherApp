@@ -89,6 +89,11 @@ class App
 
 		this.ForeCastRetrieved.Add(this.OnForecastRetrieved.bind(this));
 		this.DataBindingUpdated.Add(this.OnDataBindingUpdated.bind(this));
+
+		if(DEBUG)
+		{
+			ConfigManager.LastAlertDate = DateTime.MinValue;
+		}
 	}
 
 	// iterates through all the elements that have a data binding, assigning them the cached values and listening for changes
@@ -110,6 +115,7 @@ class App
 				Debug.WriteLine(`Assigning element '${element.id}' to value '${ConfigManager[property]}'`);
 				element.value = `${ConfigManager[property]}`;
 			}
+			//@ts-ignore
 			element.addEventListener("input", (ev: InputEvent) =>
 			{
 				// a bit weird, but we can't confirm if this is float or int
@@ -141,6 +147,7 @@ class App
 				Debug.WriteLine(`Assigning element '${element.id}' to value '${ConfigManager[property]}'`);
 				element.value = ConfigManager[property];
 			}
+			//@ts-ignore
 			element.addEventListener("input", (ev: InputEvent) =>
 			{
 				// don't really need to validate it as the value *should* always be a string
@@ -170,6 +177,7 @@ class App
 				Debug.WriteLine(`Assigning element '${element.id}' to value '${ConfigManager[property]}'`);
 				element.checked = ConfigManager[property];
 			}
+			//@ts-ignore
 			element.addEventListener("input", (ev: InputEvent) =>
 			{
 
@@ -216,6 +224,7 @@ class App
 	// Fired when cordova interfaces are accessible
 	public OnReady()
 	{
+		Debug.WriteLine("Application Fully Ready");
 		this.UpdateTimer();
 	}
 
@@ -246,9 +255,13 @@ class App
 
 	private UpdateWeather()
 	{
+		Debug.WriteLine(`Updating Weather...`);
+
 		// return;
 		if(!this.GetNewPosition())
 		{
+			Debug.WriteLine(`No position Found... Returning Early.`);
+
 			return;
 		}
 
@@ -271,36 +284,44 @@ class App
 		Debug.WriteLine(`Current Position: {lat: ${position.coords.latitude} lon: ${position.coords.longitude}}`);
 		// Check if we should alert them of these changes yet or not
 		this.CheckWeather();
-	}
-
-	private newMethod()
-	{
 		
+		Debug.WriteLine(`Finished Updating Weather...`);
 	}
-
 	/**
 	 * Checks the current weather to see if it's time for a walk and alerts them if they haven't been alerted today.
 	 * @noreturn
 	 */
 	private CheckWeather()
 	{
+		Debug.WriteLine(`Checking Weather...`);
 		let weather = ConfigManager.CurrentWeather;
 		if (!weather)
 		{
+			Debug.WriteLine(`No weather found.`);
 			return;
 		}
 
 		if (DateTime.Today.Subtract(ConfigManager.LastAlertDate).TotalDays < 1)
 		{
+			Debug.WriteLine(`Last notification time was too soon: ${DateTime.Today.Subtract(ConfigManager.LastAlertDate).TotalDays} days`, 
+				ConfigManager.LastAlertDate);
 			return;
 		}
 
 		if (App.GetDesiredTemperature(weather) >= ConfigManager.AlertPoint)
 		{
+			Debug.WriteLine(`Weather is good for a walk... Notifying client.`);
+
 			this.GoodWeatherAlerted.Invoke();
 			NotificationManager.PushNotification("Time for your walk 🏃", `It's currently ${weather.temp}(${weather.feels_like}) ${ConfigManager.DegreesSymbol} and a perfect time for a walk`);
 			ConfigManager.LastAlertDate = DateTime.Today;
 		}
+		else
+		{
+			Debug.WriteLine(`Weather still out of range.`);
+		}
+		
+		Debug.WriteLine(`Finished Checking Weather.`);
 	}
 
 	/**
@@ -360,6 +381,7 @@ class App
 	 */
 	private OnForecastRetrieved(data: OneCallResponse)
 	{
+		Debug.WriteLine(`Forecast Retreived: ${data}`, data);
 		ConfigManager.SavedForecast = data;
 		ConfigManager.CurrentWeather = data.current;
 		this.GenerateCurrentWeather(data.current);
@@ -371,6 +393,7 @@ class App
 
 	private GenerateForecast(data: OneCallResponse)
 	{
+		Debug.WriteLine("Generating Forecast...");
 		function generateHTML(weather: WeatherReport)
 		{
 			let date = DateTime.FromUTCTimeStamp(weather.dt);
@@ -393,23 +416,31 @@ class App
 				timestring = `${date.Hour - 12} PM`;
 			}
 
-			return `<div>
-						<div>${App.GetDesiredTemperature(weather).toFixed(1)}${ConfigManager.DegreesSymbol}</div>
-						<img src="${OpenWeatherIcons.get(weather.weather[0].icon)}" class="weather-svg" />
-						<div>${timestring}</div>
-					</div>`;
+			let result =  
+				`<div>` +
+				`\n	<div>${App.GetDesiredTemperature(weather).toFixed(1)}${ConfigManager.DegreesSymbol}</div>` +
+				`\n	<div>${timestring}</div>` +
+				`\n	<img src="${OpenWeatherIcons.get(weather.weather[0].icon)}" class="weather-svg" />` +
+				`\n</div>`;
+			return result;
 		}
 
 		this.HourlyWeather.innerHTML = "";
 		for (let i = 0; i < 4; i++)
 		{
-			this.HourlyWeather.innerHTML += generateHTML(data.hourly[i]);
+			let html = generateHTML(data.hourly[i]);
+			Debug.WriteLine(`Injecting the following html\n${html}`, html);
+
+			this.HourlyWeather.innerHTML += html;
 		}
+
+		Debug.WriteLine(`Generated Forecast...`);
 	}
 
 
 	private GenerateWalkTime(data: OneCallResponse)
 	{
+		Debug.WriteLine(`Generating Walk Time...`);
 		let bestReport: null | WeatherReport = null;
 		let alertPoint = ConfigManager.AlertPoint;
 		for (let report of data.hourly)
@@ -432,6 +463,8 @@ class App
 
 		if (bestReport)
 		{
+			Debug.WriteLine(`Walk time found: ${JSON.stringify(bestReport)}`, bestReport);
+
 			let date = DateTime.FromUTCTimeStamp(bestReport.dt);
 			this.EstimationReport.innerHTML = `
 			<span class="dev-box">${App.GetTime(date)}</span>
@@ -439,6 +472,7 @@ class App
 		}
 		else
 		{
+			Debug.WriteLine(`Could not find a good walk time... defaulting to now`);
 			this.EstimationReport.innerHTML = `
 			<span class="dev-box">Now</span>
 			<span class="dev-box">N/A</span>`;
@@ -456,6 +490,7 @@ class App
 	// Fired after the config has been assigned
 	private OnDataBindingUpdated(property: string)
 	{
+		Debug.WriteLine(`Data-Binding Updated '${property}' = ${ConfigManager[property]}`);
 		switch (property)
 		{
 			case "UseCelcius":

@@ -830,6 +830,7 @@ export class DateTime
 }
 
 
+//@ts-ignore
 export function TestMethod(target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor)
 {
 	try

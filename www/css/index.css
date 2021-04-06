@@ -4,8 +4,8 @@ body
 	color: rgb(255, 255, 255);
 	font-family: 'Noto Sans JP', sans-serif, 'Roboto', sans-serif;
 	font-size: 24px;
-	margin:0px;
-	padding:8px;
+	margin:0;
+	padding:0;
 	/* Padding to avoid the "unsafe" areas behind notches in the screen */
 	/* padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); */
 }

@@ -26,14 +26,15 @@ class App {
         this.GeoLocation = navigator.geolocation;
         this.BindValues();
         this.LoadSavedData();
-        this.WeatherRetrieved = new EventManager();
         this.ForeCastRetrieved = new EventManager();
         this.PositionRetrieved = new EventManager();
         this.GoodWeatherAlerted = new EventManager();
         this.DataBindingUpdated = new EventManager();
         this.ForeCastRetrieved.Add(this.OnForecastRetrieved.bind(this));
-        this.WeatherRetrieved.Add(this.OnWeatherRetreived.bind(this));
         this.DataBindingUpdated.Add(this.OnDataBindingUpdated.bind(this));
+        if (DEBUG) {
+            ConfigManager.LastAlertDate = DateTime.MinValue;
+        }
     }
     BindValues() {
         if (this.BoundValues) {
@@ -111,6 +112,7 @@ class App {
         Debug.WriteLine("Finished Loading Saved Data...");
     }
     OnReady() {
+        Debug.WriteLine("Application Fully Ready");
         this.UpdateTimer();
     }
     UpdateTimer() {
@@ -128,7 +130,9 @@ class App {
         this.UpdateWeather();
     }
     UpdateWeather() {
+        Debug.WriteLine(`Updating Weather...`);
         if (!this.GetNewPosition()) {
+            Debug.WriteLine(`No position Found... Returning Early.`);
             return;
         }
         let position = ConfigManager.CurrentPosition;
@@ -136,22 +140,29 @@ class App {
             .then(forecast => this.ForeCastRetrieved.Invoke(forecast));
         Debug.WriteLine(`Current Position: {lat: ${position.coords.latitude} lon: ${position.coords.longitude}}`);
         this.CheckWeather();
-    }
-    newMethod() {
+        Debug.WriteLine(`Finished Updating Weather...`);
     }
     CheckWeather() {
+        Debug.WriteLine(`Checking Weather...`);
         let weather = ConfigManager.CurrentWeather;
         if (!weather) {
+            Debug.WriteLine(`No weather found.`);
             return;
         }
         if (DateTime.Today.Subtract(ConfigManager.LastAlertDate).TotalDays < 1) {
+            Debug.WriteLine(`Last notification time was too soon: ${DateTime.Today.Subtract(ConfigManager.LastAlertDate).TotalDays} days`, ConfigManager.LastAlertDate);
             return;
         }
-        if (App.GetDesiredTemperature(weather.main) >= ConfigManager.AlertPoint) {
+        if (App.GetDesiredTemperature(weather) >= ConfigManager.AlertPoint) {
+            Debug.WriteLine(`Weather is good for a walk... Notifying client.`);
             this.GoodWeatherAlerted.Invoke();
-            NotificationManager.PushNotification("Time for your walk 🏃", `It's currently ${weather.main.temp}(${weather.main.feels_like}) ${ConfigManager.DegreesSymbol} and a perfect time for a walk`);
+            NotificationManager.PushNotification("Time for your walk 🏃", `It's currently ${weather.temp}(${weather.feels_like}) ${ConfigManager.DegreesSymbol} and a perfect time for a walk`);
             ConfigManager.LastAlertDate = DateTime.Today;
         }
+        else {
+            Debug.WriteLine(`Weather still out of range.`);
+        }
+        Debug.WriteLine(`Finished Checking Weather.`);
     }
     GetNewPosition() {
         let pingLocation = () => {
@@ -180,11 +191,15 @@ class App {
         return true;
     }
     OnForecastRetrieved(data) {
+        Debug.WriteLine(`Forecast Retreived: ${data}`, data);
         ConfigManager.SavedForecast = data;
+        ConfigManager.CurrentWeather = data.current;
+        this.GenerateCurrentWeather(data.current);
         this.GenerateForecast(data);
         this.GenerateWalkTime(data);
     }
     GenerateForecast(data) {
+        Debug.WriteLine("Generating Forecast...");
         function generateHTML(weather) {
             let date = DateTime.FromUTCTimeStamp(weather.dt);
             let timestring = ``;
@@ -200,18 +215,23 @@ class App {
             else {
                 timestring = `${date.Hour - 12} PM`;
             }
-            return `<div>
-						<div>${App.GetDesiredTemperature(weather).toFixed(1)}${ConfigManager.DegreesSymbol}</div>
-						<img src="${OpenWeatherIcons.get(weather.weather[0].icon)}" class="weather-svg" />
-						<div>${timestring}</div>
-					</div>`;
+            let result = `<div>` +
+                `\n	<div>${App.GetDesiredTemperature(weather).toFixed(1)}${ConfigManager.DegreesSymbol}</div>` +
+                `\n	<div>${timestring}</div>` +
+                `\n	<img src="${OpenWeatherIcons.get(weather.weather[0].icon)}" class="weather-svg" />` +
+                `\n</div>`;
+            return result;
         }
         this.HourlyWeather.innerHTML = "";
         for (let i = 0; i < 4; i++) {
-            this.HourlyWeather.innerHTML += generateHTML(data.hourly[i]);
+            let html = generateHTML(data.hourly[i]);
+            Debug.WriteLine(`Injecting the following html\n${html}`, html);
+            this.HourlyWeather.innerHTML += html;
         }
+        Debug.WriteLine(`Generated Forecast...`);
     }
     GenerateWalkTime(data) {
+        Debug.WriteLine(`Generating Walk Time...`);
         let bestReport = null;
         let alertPoint = ConfigManager.AlertPoint;
         for (let report of data.hourly) {
@@ -226,25 +246,24 @@ class App {
             }
         }
         if (bestReport) {
+            Debug.WriteLine(`Walk time found: ${JSON.stringify(bestReport)}`, bestReport);
             let date = DateTime.FromUTCTimeStamp(bestReport.dt);
             this.EstimationReport.innerHTML = `
 			<span class="dev-box">${App.GetTime(date)}</span>
 			<span class="dev-box">${bestReport.temp.toFixed(0)}${ConfigManager.DegreesSymbol}(${bestReport.feels_like.toFixed(0)}${ConfigManager.DegreesSymbol})</span>`;
         }
         else {
+            Debug.WriteLine(`Could not find a good walk time... defaulting to now`);
             this.EstimationReport.innerHTML = `
 			<span class="dev-box">Now</span>
 			<span class="dev-box">N/A</span>`;
         }
     }
     GenerateCurrentWeather(weather) {
-        this.MainWeather.innerHTML = `<h1 class="dev-box">${App.GetDesiredTemperature(weather.main).toFixed(0)}${ConfigManager.DegreesSymbol}</h1>`;
-    }
-    OnWeatherRetreived(weather) {
-        ConfigManager.CurrentWeather = weather;
-        this.GenerateCurrentWeather(weather);
+        this.MainWeather.innerHTML = `<h1 class="dev-box">${App.GetDesiredTemperature(weather).toFixed(0)}${ConfigManager.DegreesSymbol}</h1>`;
     }
     OnDataBindingUpdated(property) {
+        Debug.WriteLine(`Data-Binding Updated '${property}' = ${ConfigManager[property]}`);
         switch (property) {
             case "UseCelcius":
                 this.UpdateWeather();

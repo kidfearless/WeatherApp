@@ -3,6 +3,7 @@ import { INotificationManager } from "../INotificationManager.js";
 export class BrowserNotificationManager implements INotificationManager
 {
 	private static IsCapable: null | boolean = null;
+	// @ts-ignore
 	private static async NullFunc (title: string, message: string){}
 	private async pushNotification(title: string, message: string)
 	{

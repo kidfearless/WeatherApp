@@ -72,7 +72,7 @@ export class ConfigManager
 	}
 	public static set LastAlertDate(value: DateTime)
 	{
-		Config.Set("LastAlertDate", DateTime.Today.ToJSONString());
+		Config.Set("LastAlertDate", value.ToJSONString());
 	}
 
 	public static get CurrentPosition(): GeolocationPosition | null

@@ -43,7 +43,7 @@ export class ConfigManager {
         return DateTime.FromJSONString(lastdate);
     }
     static set LastAlertDate(value) {
-        Config.Set("LastAlertDate", DateTime.Today.ToJSONString());
+        Config.Set("LastAlertDate", value.ToJSONString());
     }
     static get CurrentPosition() {
         return Config.Get("CurrentPosition");

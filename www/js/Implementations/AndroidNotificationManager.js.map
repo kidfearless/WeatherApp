@@ -1,0 +1,1 @@
+{"version":3,"file":"AndroidNotificationManager.js","sourceRoot":"","sources":["../../ts/Implementations/AndroidNotificationManager.ts"],"names":[],"mappings":"AAGA,MAAM,OAAO,0BAA0B;IAEtC,gBAAgB,CAAC,KAAa,EAAE,OAAe;QAK9C,OAAO,CAAC,OAAO,CAAC,YAAY,CAAC,KAAK,CAAC,QAAQ,CAAC;YAC3C,KAAK,EAAE,KAAK;YACZ,IAAI,EAAE,OAAO;YACb,UAAU,EAAE,IAAI;SAChB,CAAC,CAAC;IACJ,CAAC;CAED"}
